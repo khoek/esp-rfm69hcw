@@ -6,6 +6,7 @@
 #include <esp_err.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#include <freertos/task.h>
 
 typedef enum rfm69hcw_reg_t {
     RFM69HCW_REG_FIFO = 0x00,
@@ -167,14 +168,7 @@ static inline uint8_t MK_RFM69HCW_PACKET_CONFIG_2(uint8_t inter_packet_rx_delay,
     return ret;
 }
 
-typedef struct rfm69hcw {
-    gpio_num_t pin_rst;
-    gpio_num_t pin_irq;
-    spi_device_handle_t spi;
-
-    SemaphoreHandle_t irq_sem;
-} rfm69hcw_t;
-
+typedef struct rfm69hcw rfm69hcw_t;
 typedef rfm69hcw_t* rfm69hcw_handle_t;
 
 // Register the RFM69HCW on the given SPI bus (including managing CS and RST), but don't send any traffic yet.
@@ -297,6 +291,25 @@ typedef struct rfm69hcw_rx_config {
     uint8_t payload_len;
 } rfm69hcw_rx_config_t;
 
-void rfm69hcw_enter_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg);
+void rfm69hcw_configure_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg);
+
+typedef struct rfm69hcw_irq_task rfm69hcw_irq_task_t;
+typedef rfm69hcw_irq_task_t* rfm69hcw_irq_task_handle_t;
+
+esp_err_t rfm69hcw_enter_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg, bool (*handle_irq)(rfm69hcw_irq_task_handle_t task, rfm69hcw_handle_t dev), const BaseType_t core_id, const uint32_t task_task_size, rfm69hcw_irq_task_handle_t* out_handle);
+
+// Wakes the associated task, causing `handle_irq()` to be called despite the IRQ not actually being
+// asserted. Useful to notify the task to e.g. terminate via some synchronization mechanism. If an
+// actual IRQ also arrives while the wake message is being dispatched, there is no guarentee that
+// `handle_irq()` will be called twice.
+void rfm69hcw_wake(rfm69hcw_irq_task_handle_t task);
+
+// This function may be called at most once. It may not be called from the provided `handle_irq()`
+// function (this will result in a deadlock). (Instead `handle_irq()` should simply return `false`
+// to indicate that the task should stop. Note also that if `handle_irq()` ever returns `false` then
+// handle `task` will become invalid and be freed immediately after, at which point the application
+// author need not and may no call this function passing the same (now invalid) handle. This, application
+// authors should probably choose to use only one of these methods of termination.)
+void rfm69hcw_destroy(rfm69hcw_irq_task_handle_t task);
 
 #endif
