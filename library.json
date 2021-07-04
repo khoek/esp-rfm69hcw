@@ -1,6 +1,6 @@
 {
     "name": "esp-rfm69hcw",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A library built on esp-idf for controlling RFM69HCW radio chips.",
     "keywords": "rfm69hcw, rfm69, radio, spi, hardware, esp-idf, esp32, esp8266",
     "repository": {
