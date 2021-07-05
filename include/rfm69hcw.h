@@ -35,6 +35,8 @@ typedef enum rfm69hcw_reg_t {
     RFM69HCW_REG_AFC_BW = 0x1A,
     RFM69HCW_REG_OOK_PEAK = 0x1B,
     RFM69HCW_REG_AFC_FEI = 0x1E,
+    RFM69HCW_REG_AFC_MSB = 0x1F,
+    RFM69HCW_REG_AFC_LSB = 0x20,
     RFM69HCW_REG_RSSI_VALUE = 0x24,
 
     RFM69HCW_REG_DIO_MAPPING_1 = 0x25,
@@ -44,6 +46,9 @@ typedef enum rfm69hcw_reg_t {
     RFM69HCW_REG_IRQ_FLAGS_2 = 0x28,
 
     RFM69HCW_REG_RSSI_THRESH = 0x29,
+
+    RFM69HCW_REG_RX_TIMEOUT_1 = 0x2A,
+    RFM69HCW_REG_RX_TIMEOUT_2 = 0x2B,
 
     RFM69HCW_REG_PREAMBLE_MSB = 0x2C,
     RFM69HCW_REG_PREAMBLE_LSB = 0x2D,
@@ -84,6 +89,8 @@ typedef enum rfm69hcw_reg_t {
 
 #define RFM69HCW_DIO_MAPPING_1_DIO_0_CRC_OK (0b00ULL << 6)
 #define RFM69HCW_DIO_MAPPING_1_DIO_0_PAYLOAD_READY (0b01ULL << 6)
+#define RFM69HCW_DIO_MAPPING_1_DIO_0_SYNC_ADDRESS (0b10ULL << 6)
+#define RFM69HCW_DIO_MAPPING_1_DIO_0_RSSI (0b11ULL << 6)
 
 #define RFM69HCW_DIO_MAPPING_2_CLK_OUT_OFF 0b111
 
@@ -154,17 +161,17 @@ static inline uint8_t MK_RFM69HCW_PACKET_CONFIG_1(bool packet_format_variable, r
     return ret;
 }
 
-#define SHIFT_RFM69HCW_PACKET_CONFIG_2_RESTART_RX (0x1ULL << 2)
-#define SHIFT_RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON (0x1ULL << 1)
-#define SHIFT_RFM69HCW_PACKET_CONFIG_2_AES_ON (0x1ULL << 0)
+#define RFM69HCW_PACKET_CONFIG_2_RESTART_RX (0x1ULL << 2)
+#define RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON (0x1ULL << 1)
+#define RFM69HCW_PACKET_CONFIG_2_AES_ON (0x1ULL << 0)
 #define SHIFT_RFM69HCW_PACKET_CONFIG_2_INTER_PACKET_RX_DELAY 4
 
 static inline uint8_t MK_RFM69HCW_PACKET_CONFIG_2(uint8_t inter_packet_rx_delay, bool restart_rx, bool auto_rx_restart_on, bool aes_on) {
     uint8_t ret = 0;
     ret |= (inter_packet_rx_delay & 0b1111ULL) << SHIFT_RFM69HCW_PACKET_CONFIG_2_INTER_PACKET_RX_DELAY;
-    ret |= restart_rx ? SHIFT_RFM69HCW_PACKET_CONFIG_2_RESTART_RX : 0;
-    ret |= auto_rx_restart_on ? SHIFT_RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON : 0;
-    ret |= aes_on ? SHIFT_RFM69HCW_PACKET_CONFIG_2_AES_ON : 0;
+    ret |= restart_rx ? RFM69HCW_PACKET_CONFIG_2_RESTART_RX : 0;
+    ret |= auto_rx_restart_on ? RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON : 0;
+    ret |= aes_on ? RFM69HCW_PACKET_CONFIG_2_AES_ON : 0;
     return ret;
 }
 
@@ -289,6 +296,9 @@ typedef struct rfm69hcw_rx_config {
     uint8_t sync_value[9];
 
     uint8_t payload_len;
+
+    uint8_t inter_packet_rx_delay;
+    uint8_t timeout_rssi_thresh;
 } rfm69hcw_rx_config_t;
 
 void rfm69hcw_configure_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg);

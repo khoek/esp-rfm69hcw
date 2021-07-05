@@ -145,17 +145,20 @@ void rfm69hcw_configure_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cf
     // FIXME OOK register stuff?
     // rfm69hcw_reg_write(dev, RFM69HCW_REG_OOK_PEAK, 0x78);
 
-    rfm69hcw_reg_write(dev, RFM69HCW_REG_DIO_MAPPING_1, RFM69HCW_DIO_MAPPING_1_DIO_0_PAYLOAD_READY);
+    rfm69hcw_reg_write(dev, RFM69HCW_REG_DIO_MAPPING_1, RFM69HCW_DIO_MAPPING_1_DIO_0_RSSI);
     rfm69hcw_reg_write(dev, RFM69HCW_REG_DIO_MAPPING_2, RFM69HCW_DIO_MAPPING_2_CLK_OUT_OFF);
     rfm69hcw_reg_write(dev, RFM69HCW_REG_PACKET_CONFIG_1, MK_RFM69HCW_PACKET_CONFIG_1(false, RFM69HCW_DC_FREE_NONE, false, false, RFM69HCW_ADDRESS_FILTERING_NONE));
-    rfm69hcw_reg_write(dev, RFM69HCW_REG_PACKET_CONFIG_2, MK_RFM69HCW_PACKET_CONFIG_2(0x0, false, true, false));
+    rfm69hcw_reg_write(dev, RFM69HCW_REG_PACKET_CONFIG_2, MK_RFM69HCW_PACKET_CONFIG_2(cfg->inter_packet_rx_delay, false, true, false));
 
     rfm69hcw_set_sync(dev, cfg->sync_value, cfg->sync_bit_tol);
     rfm69hcw_reg_write(dev, RFM69HCW_REG_PAYLOAD_LENGTH, cfg->payload_len);
 
     // CUSTOM!!!
     // FIXME DO SOME MEASUREMENTS AND CALIBRATE THIS
-    rfm69hcw_reg_write(dev, RFM69HCW_REG_RSSI_THRESH, 0xE4);
+    // rfm69hcw_reg_write(dev, RFM69HCW_REG_RSSI_THRESH, 0xE4);
+    rfm69hcw_reg_write(dev, RFM69HCW_REG_RSSI_THRESH, 0xC0);
+
+    rfm69hcw_reg_write(dev, RFM69HCW_REG_RX_TIMEOUT_2, cfg->timeout_rssi_thresh);
 
     rfm69hcw_reg_write(dev, RFM69HCW_REG_OP_MODE, RFM69HCW_OP_MODE_MODE_RX);
     while (!(rfm69hcw_reg_read(dev, RFM69HCW_REG_IRQ_FLAGS_1) & RFM69HCW_IRQ_FLAGS_1_MODE_READY)) {
