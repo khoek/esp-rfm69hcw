@@ -297,6 +297,10 @@ typedef struct rfm69hcw_rx_config {
 
     uint8_t payload_len;
 
+    // RSSI in dBm below zero in 0.5dBm steps; 1 is -0.5dBm,
+    // 2 is -1dBm, etc.
+    uint8_t rssi_thresh;
+
     uint8_t inter_packet_rx_delay;
     uint8_t timeout_rssi_thresh;
 } rfm69hcw_rx_config_t;

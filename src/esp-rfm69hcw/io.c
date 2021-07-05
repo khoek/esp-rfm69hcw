@@ -153,10 +153,8 @@ void rfm69hcw_configure_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cf
     rfm69hcw_set_sync(dev, cfg->sync_value, cfg->sync_bit_tol);
     rfm69hcw_reg_write(dev, RFM69HCW_REG_PAYLOAD_LENGTH, cfg->payload_len);
 
-    // CUSTOM!!!
-    // FIXME DO SOME MEASUREMENTS AND CALIBRATE THIS
-    // rfm69hcw_reg_write(dev, RFM69HCW_REG_RSSI_THRESH, 0xE4);
-    rfm69hcw_reg_write(dev, RFM69HCW_REG_RSSI_THRESH, 0xC0);
+    // TODO add a function to measure the background noise floor
+    rfm69hcw_reg_write(dev, RFM69HCW_REG_RSSI_THRESH, cfg->rssi_thresh ? cfg->rssi_thresh : 0xFF);
 
     rfm69hcw_reg_write(dev, RFM69HCW_REG_RX_TIMEOUT_2, cfg->timeout_rssi_thresh);
 
