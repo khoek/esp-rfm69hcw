@@ -207,13 +207,14 @@ esp_err_t rfm69hcw_enter_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* c
     return ESP_OK;
 }
 
-void rfm69hcw_managed_enter_tx(rfm69hcw_handle_t dev /*, const rfm69hcw_rx_config_t* cfg*/) {
+void rfm69hcw_managed_enter_tx(rfm69hcw_handle_t dev /*, const rfm69hcw_tx_config_t* cfg*/) {
+    ESP_LOGE(TAG, "unimplemented!");
+    abort();
+
     // FIXME do this.
 
-    rfm69hcw_reg_write(dev, RFM69HCW_REG_OP_MODE, RFM69HCW_OP_MODE_MODE_STANDBY);
+    // rfm69hcw_reg_write(dev, RFM69HCW_REG_OP_MODE, RFM69HCW_OP_MODE_MODE_STANDBY);
     // rfm69hcw_set_power_level(dev, RFM69HCW_POWER_????);
-
-    // FIXME this.
 
     // FIXME abstract RFM69HCW_REG_FIFO_THRESH
     // rfm69hcw_reg_write(dev, RFM69HCW_REG_FIFO_THRESH, 0x01);

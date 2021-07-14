@@ -15,16 +15,23 @@ void rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst
         .input_delay_ns = 0,
     };
 
+    // As per spec, we should usually have the RST pin in Hi-Z mode, unless we explicitly
+    // want to pull it up.
     gpio_config_t io_conf;
-
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pin_bit_mask = (1ULL << pin_rst);
     io_conf.pull_down_en = 0;
     io_conf.pull_up_en = 0;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
 
-    gpio_set_level(pin_rst, 0);
+    while (gpio_get_level(pin_rst)) {
+        vTaskDelay(1);
+    }
+
+    // As per spec, after a POR (power-on reset) we must wait 10ms after the chip pulls the
+    // RST pin low before it is ready.
+    vTaskDelay(1 + (10 / portTICK_PERIOD_MS));
 
     rfm69hcw_handle_t dev = malloc(sizeof(rfm69hcw_t));
     dev->pin_rst = pin_rst;
@@ -40,8 +47,25 @@ void rfm69hcw_reset(rfm69hcw_handle_t dev) {
     ESP_LOGD(TAG, "resetting");
 
     gpio_set_level(dev->pin_rst, 1);
+
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
+    io_conf.pin_bit_mask = (1ULL << dev->pin_rst);
+    io_conf.pull_down_en = 0;
+    io_conf.pull_up_en = 0;
+
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+
+    // Spec says: pull up for 100us.
     util_wait_micros(100);
-    gpio_set_level(dev->pin_rst, 0);
+
+    // As per spec, the RST pin should usually be left in Hi-Z mode, unless we explicitly
+    // want to pull it up during a reset (as we have just done).
+    io_conf.mode = GPIO_MODE_INPUT;
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+
+    // Spec says: wait 5ms.
     vTaskDelay(1 + (5 / portTICK_PERIOD_MS));
 
     while (!(rfm69hcw_reg_read(dev, RFM69HCW_REG_IRQ_FLAGS_1) & RFM69HCW_IRQ_FLAGS_1_MODE_READY)) {
