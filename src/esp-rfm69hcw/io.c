@@ -40,6 +40,18 @@ void rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst
 
     rfm69hcw_reset(dev);
 
+    uint8_t ver = rfm69hcw_reg_read(dev, RFM69HCW_REG_VERSION);
+    switch (ver) {
+        case RFM69HCW_VERSION_DRIVER_SUPPORTED: {
+            // Current version supported by the driver.
+            break;
+        }
+        default: {
+            ESP_LOGE(TAG, "unknown chip version (0x%02X), are pin numbers correct?", ver);
+            return;
+        }
+    }
+
     *out_dev = dev;
 }
 

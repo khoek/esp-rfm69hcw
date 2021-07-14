@@ -8,6 +8,9 @@
 #include <freertos/semphr.h>
 #include <freertos/task.h>
 
+// The chip version of the RFM69HCW supported by this driver.
+#define RFM69HCW_VERSION_DRIVER_SUPPORTED 0x24
+
 typedef enum rfm69hcw_reg_t {
     RFM69HCW_REG_FIFO = 0x00,
     RFM69HCW_REG_OP_MODE = 0x01,
