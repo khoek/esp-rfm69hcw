@@ -182,7 +182,7 @@ typedef struct rfm69hcw rfm69hcw_t;
 typedef rfm69hcw_t* rfm69hcw_handle_t;
 
 // Register the RFM69HCW on the given SPI bus (including managing CS and RST), but don't send any traffic yet.
-void rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst, gpio_num_t pin_irq, rfm69hcw_handle_t* out_dev);
+esp_err_t rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst, gpio_num_t pin_irq, rfm69hcw_handle_t* out_dev);
 
 void rfm69hcw_reset(rfm69hcw_handle_t dev);
 uint8_t rfm69hcw_reg_read(rfm69hcw_handle_t dev, rfm69hcw_reg_t addr);

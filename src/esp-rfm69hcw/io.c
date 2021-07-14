@@ -6,7 +6,7 @@
 
 #include "private.h"
 
-void rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst, gpio_num_t pin_irq, rfm69hcw_handle_t* out_dev) {
+esp_err_t rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst, gpio_num_t pin_irq, rfm69hcw_handle_t* out_dev) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = 1000000,  // FIXME has been divided by 10
         .mode = 0,
@@ -48,11 +48,12 @@ void rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst
         }
         default: {
             ESP_LOGE(TAG, "unknown chip version (0x%02X), are pin numbers correct?", ver);
-            return;
+            return ESP_FAIL;
         }
     }
 
     *out_dev = dev;
+    return ESP_OK;
 }
 
 void rfm69hcw_reset(rfm69hcw_handle_t dev) {
