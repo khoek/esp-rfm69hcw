@@ -48,6 +48,7 @@ esp_err_t rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pi
         }
         default: {
             ESP_LOGE(TAG, "unknown chip version (0x%02X), are pin numbers correct?", ver);
+            free(dev);
             return ESP_FAIL;
         }
     }
