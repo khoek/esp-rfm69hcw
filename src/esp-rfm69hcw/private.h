@@ -4,7 +4,7 @@
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
 
-#include "rfm69hcw.h"
+#include "device/rfm69hcw.h"
 
 static const char* TAG = "rfm69hcw";
 

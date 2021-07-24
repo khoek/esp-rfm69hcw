@@ -25,6 +25,7 @@ esp_err_t rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pi
     io_conf.pull_up_en = 0;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
 
+    // FIXME Add a timeout
     while (gpio_get_level(pin_rst)) {
         vTaskDelay(1);
     }
@@ -38,8 +39,6 @@ esp_err_t rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pi
     dev->pin_irq = pin_irq;
     ESP_ERROR_CHECK(spi_bus_add_device(host, &devcfg, &dev->spi));
 
-    rfm69hcw_reset(dev);
-
     uint8_t ver = rfm69hcw_reg_read(dev, RFM69HCW_REG_VERSION);
     switch (ver) {
         case RFM69HCW_VERSION_DRIVER_SUPPORTED: {
@@ -52,6 +51,8 @@ esp_err_t rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pi
             return ESP_FAIL;
         }
     }
+
+    rfm69hcw_reset(dev);
 
     *out_dev = dev;
     return ESP_OK;

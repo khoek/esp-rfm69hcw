@@ -4,9 +4,6 @@
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
 #include <esp_err.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#include <freertos/task.h>
 
 // The chip version of the RFM69HCW supported by this driver.
 #define RFM69HCW_VERSION_DRIVER_SUPPORTED 0x24
@@ -309,24 +306,5 @@ typedef struct rfm69hcw_rx_config {
 } rfm69hcw_rx_config_t;
 
 void rfm69hcw_configure_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg);
-
-typedef struct rfm69hcw_irq_task rfm69hcw_irq_task_t;
-typedef rfm69hcw_irq_task_t* rfm69hcw_irq_task_handle_t;
-
-esp_err_t rfm69hcw_enter_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg, bool (*handle_irq)(rfm69hcw_irq_task_handle_t task, rfm69hcw_handle_t dev), const BaseType_t core_id, const uint32_t task_task_size, rfm69hcw_irq_task_handle_t* out_handle);
-
-// Wakes the associated task, causing `handle_irq()` to be called despite the IRQ not actually being
-// asserted. Useful to notify the task to e.g. terminate via some synchronization mechanism. If an
-// actual IRQ also arrives while the wake message is being dispatched, there is no guarentee that
-// `handle_irq()` will be called twice.
-void rfm69hcw_wake(rfm69hcw_irq_task_handle_t task);
-
-// This function may be called at most once. It may not be called from the provided `handle_irq()`
-// function (this will result in a deadlock). (Instead `handle_irq()` should simply return `false`
-// to indicate that the task should stop. Note also that if `handle_irq()` ever returns `false` then
-// handle `task` will become invalid and be freed immediately after, at which point the application
-// author need not and may no call this function passing the same (now invalid) handle. This, application
-// authors should probably choose to use only one of these methods of termination.)
-void rfm69hcw_destroy(rfm69hcw_irq_task_handle_t task);
 
 #endif
