@@ -1,5 +1,4 @@
-#ifndef __LIB_RFM69HCW_H
-#define __LIB_RFM69HCW_H
+#pragma once
 
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
@@ -121,84 +120,22 @@ typedef enum rfm69hcw_reg {
 #define SHIFT_RFM69HCW_SYNC_CONFIG_SYNC_TOL 0
 
 // As per spec, `sync_size` is 1 less than the number of sync bytes.
-static inline uint8_t MK_RFM69HCW_SYNC_CONFIG(bool sync_on, bool fifo_fill_condition, uint8_t sync_size, uint8_t sync_tol) {
+static inline uint8_t MK_RFM69HCW_SYNC_CONFIG(bool sync_on,
+                                              bool fifo_fill_condition,
+                                              uint8_t sync_size,
+                                              uint8_t sync_tol) {
     assert(!(sync_size & ~MASK_RFM69HCW_SYNC_CONFIG_SYNC_SIZE));
     assert(!(sync_tol & ~MASK_RFM69HCW_SYNC_CONFIG_SYNC_TOL));
 
     uint8_t ret = 0;
     ret |= sync_on ? RFM69HCW_SYNC_CONFIG_SYNC_ON : 0;
     ret |= fifo_fill_condition ? RFM69HCW_SYNC_CONFIG_FIFO_FILL_CONDITION_1 : 0;
-    ret |= (sync_size & MASK_RFM69HCW_SYNC_CONFIG_SYNC_SIZE) << SHIFT_RFM69HCW_SYNC_CONFIG_SYNC_SIZE;
-    ret |= (sync_tol & MASK_RFM69HCW_SYNC_CONFIG_SYNC_TOL) << SHIFT_RFM69HCW_SYNC_CONFIG_SYNC_TOL;
+    ret |= (sync_size & MASK_RFM69HCW_SYNC_CONFIG_SYNC_SIZE)
+           << SHIFT_RFM69HCW_SYNC_CONFIG_SYNC_SIZE;
+    ret |= (sync_tol & MASK_RFM69HCW_SYNC_CONFIG_SYNC_TOL)
+           << SHIFT_RFM69HCW_SYNC_CONFIG_SYNC_TOL;
     return ret;
 }
-
-typedef enum rfm69hcw_dc_free {
-    RFM69HCW_DC_FREE_NONE = 0b00,
-    RFM69HCW_DC_FREE_MANCHESTER = 0b01,
-    RFM69HCW_DC_FREE_WHITENING = 0b10,
-} rfm69hcw_dc_free_t;
-
-typedef enum rfm69hcw_address_filtering {
-    RFM69HCW_ADDRESS_FILTERING_NONE = 0b00,
-    RFM69HCW_ADDRESS_FILTERING_MATCH_NODE = 0b01,
-    RFM69HCW_ADDRESS_FILTERING_MATCH_NODE_OR_BROADCAST = 0b10,
-} rfm69hcw_address_filtering_t;
-
-#define RFM69HCW_PACKET_CONFIG_1_PACKET_FORMAT_VARIABLE (0x1ULL << 7)
-#define RFM69HCW_PACKET_CONFIG_1_CRC_ON (0x1ULL << 4)
-#define RFM69HCW_PACKET_CONFIG_1_CRC_AUTO_CLEAR_OFF (0x1ULL << 3)
-#define SHIFT_RFM69HCW_PACKET_CONFIG_1_DC_FREE 5
-#define SHIFT_RFM69HCW_PACKET_CONFIG_1_ADDRESS_FILTERING 1
-
-static inline uint8_t MK_RFM69HCW_PACKET_CONFIG_1(bool packet_format_variable, rfm69hcw_dc_free_t dc_free, bool crc_on, bool crc_auto_clear_off, rfm69hcw_address_filtering_t address_filtering) {
-    uint8_t ret = 0;
-    ret |= packet_format_variable ? RFM69HCW_PACKET_CONFIG_1_PACKET_FORMAT_VARIABLE : 0;
-    ret |= ((uint8_t) dc_free) << SHIFT_RFM69HCW_PACKET_CONFIG_1_DC_FREE;
-    ret |= crc_on ? RFM69HCW_PACKET_CONFIG_1_CRC_ON : 0;
-    ret |= crc_auto_clear_off ? RFM69HCW_PACKET_CONFIG_1_CRC_AUTO_CLEAR_OFF : 0;
-    ret |= ((uint8_t) address_filtering) << SHIFT_RFM69HCW_PACKET_CONFIG_1_ADDRESS_FILTERING;
-    return ret;
-}
-
-#define RFM69HCW_PACKET_CONFIG_2_RESTART_RX (0x1ULL << 2)
-#define RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON (0x1ULL << 1)
-#define RFM69HCW_PACKET_CONFIG_2_AES_ON (0x1ULL << 0)
-#define SHIFT_RFM69HCW_PACKET_CONFIG_2_INTER_PACKET_RX_DELAY 4
-
-static inline uint8_t MK_RFM69HCW_PACKET_CONFIG_2(uint8_t inter_packet_rx_delay, bool restart_rx, bool auto_rx_restart_on, bool aes_on) {
-    uint8_t ret = 0;
-    ret |= (inter_packet_rx_delay & 0b1111ULL) << SHIFT_RFM69HCW_PACKET_CONFIG_2_INTER_PACKET_RX_DELAY;
-    ret |= restart_rx ? RFM69HCW_PACKET_CONFIG_2_RESTART_RX : 0;
-    ret |= auto_rx_restart_on ? RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON : 0;
-    ret |= aes_on ? RFM69HCW_PACKET_CONFIG_2_AES_ON : 0;
-    return ret;
-}
-
-typedef struct rfm69hcw rfm69hcw_t;
-typedef rfm69hcw_t* rfm69hcw_handle_t;
-
-// Register the RFM69HCW on the given SPI bus (including managing CS and RST), but don't send any traffic yet.
-esp_err_t rfm69hcw_init(spi_host_device_t host, gpio_num_t pin_cs, gpio_num_t pin_rst, gpio_num_t pin_irq, rfm69hcw_handle_t* out_dev);
-
-void rfm69hcw_reset(rfm69hcw_handle_t dev);
-uint8_t rfm69hcw_reg_read(rfm69hcw_handle_t dev, rfm69hcw_reg_t addr);
-void rfm69hcw_reg_write(rfm69hcw_handle_t dev, rfm69hcw_reg_t addr, uint8_t val);
-void rfm69hcw_reg_block_write_fifo(rfm69hcw_handle_t dev, const uint8_t* buff, uint8_t len);
-
-typedef enum rfm69hcw_power_level {
-    RFM69HCW_POWER_RX_or_PA0,
-    RFM69HCW_POWER_TX_NORMAL,
-    // Note: Spec requires 1% duty cycle in this mode! (And note that the power
-    // amplifiers are running at all times while in TX mode.) Also, MUST be off
-    // when in RX mode.
-    RFM69HCW_POWER_TX_HIGH,
-} rfm69hcw_power_level_t;
-
-// Note zero bytes are illegal sync bytes for the RFM69HCW, and the `sync_value` argument
-// must be a zero-terminated byte array of length at most 8.
-void rfm69hcw_set_sync(rfm69hcw_handle_t dev, const uint8_t* sync_value, uint8_t sync_tol);
-void rfm69hcw_set_power_level(rfm69hcw_handle_t dev, rfm69hcw_power_level_t level);
 
 typedef enum rfm69hcw_data_mode {
     RFM69HCW_DATA_MODE_PACKET_MODE = 0b00,
@@ -224,9 +161,38 @@ typedef enum rfm69hcw_modulation_shaping_ook {
     RFM69HCW_MODULATION_SHAPING_OOK_FILTERING_CUTOFF_2_BR = 0b10,
 } rfm69hcw_modulation_shaping_ook_t;
 
+#define MASK_RFM69HCW_DATA_MODE 0b111ULL
+#define MASK_RFM69HCW_MODULATION_TYPE 0b11ULL
+#define MASK_RFM69HCW_SHAPING 0b111ULL
 #define SHIFT_RFM69HCW_DATA_MODE 5
 #define SHIFT_RFM69HCW_MODULATION_TYPE 3
 #define SHIFT_RFM69HCW_MODULATION_SHAPING 0
+
+static inline uint8_t MK_RFM69HCW_DATA_MODUL__INTERNAL(
+    rfm69hcw_data_mode_t data_mode, rfm69hcw_modulation_type_t type,
+    uint8_t shaping) {
+    assert(!(data_mode & ~MASK_RFM69HCW_DATA_MODE));
+    assert(!(type & ~MASK_RFM69HCW_MODULATION_TYPE));
+    assert(!(shaping & ~MASK_RFM69HCW_SHAPING));
+
+    uint8_t ret = 0;
+    ret |= (((uint8_t) data_mode) << SHIFT_RFM69HCW_DATA_MODE);
+    ret |= (((uint8_t) type) << SHIFT_RFM69HCW_MODULATION_TYPE);
+    ret |= (((uint8_t) shaping) << SHIFT_RFM69HCW_MODULATION_SHAPING);
+    return ret;
+}
+
+static inline uint8_t MK_RFM69HCW_DATA_MODUL_FSK(
+    rfm69hcw_data_mode_t data_mode, rfm69hcw_modulation_type_t type,
+    rfm69hcw_modulation_shaping_fsk_t shaping) {
+    return MK_RFM69HCW_DATA_MODUL__INTERNAL(data_mode, type, (uint8_t) shaping);
+}
+
+static inline uint8_t MK_RFM69HCW_DATA_MODUL_OOK(
+    rfm69hcw_data_mode_t data_mode, rfm69hcw_modulation_type_t type,
+    rfm69hcw_modulation_shaping_ook_t shaping) {
+    return MK_RFM69HCW_DATA_MODUL__INTERNAL(data_mode, type, (uint8_t) shaping);
+}
 
 // Assumes `FX_OSC` = 32MHz.
 //
@@ -276,8 +242,112 @@ typedef enum rfm69hcw_dcc_cutoff {
     RFM69HCW_DCC_CUTOFF_0_125_PERCENT = 0b111,
 } rfm69hcw_dcc_cutoff_t;
 
+#define MASK_RFM69HCW_DCC_CUTOFF 0b111ULL
+#define MASK_RFM69HCW_RX_BW 0b11111ULL
 #define SHIFT_RFM69HCW_DCC_CUTOFF 5
 #define SHIFT_RFM69HCW_RX_BW 0
+
+static inline uint8_t MK_RFM69HCW_BW(rfm69hcw_rx_bw_t rx_bw,
+                                     rfm69hcw_dcc_cutoff_t dcc_cutoff) {
+    assert(!(dcc_cutoff & ~MASK_RFM69HCW_DCC_CUTOFF));
+    assert(!(rx_bw & ~MASK_RFM69HCW_RX_BW));
+
+    uint8_t ret = 0;
+    ret |= (((uint8_t) dcc_cutoff) << SHIFT_RFM69HCW_DCC_CUTOFF);
+    ret |= (((uint8_t) rx_bw) << SHIFT_RFM69HCW_RX_BW);
+    return ret;
+}
+
+typedef enum rfm69hcw_dc_free {
+    RFM69HCW_DC_FREE_NONE = 0b00,
+    RFM69HCW_DC_FREE_MANCHESTER = 0b01,
+    RFM69HCW_DC_FREE_WHITENING = 0b10,
+} rfm69hcw_dc_free_t;
+
+typedef enum rfm69hcw_address_filtering {
+    RFM69HCW_ADDRESS_FILTERING_NONE = 0b00,
+    RFM69HCW_ADDRESS_FILTERING_MATCH_NODE = 0b01,
+    RFM69HCW_ADDRESS_FILTERING_MATCH_NODE_OR_BROADCAST = 0b10,
+} rfm69hcw_address_filtering_t;
+
+#define RFM69HCW_PACKET_CONFIG_1_PACKET_FORMAT_VARIABLE (0x1ULL << 7)
+#define RFM69HCW_PACKET_CONFIG_1_CRC_ON (0x1ULL << 4)
+#define RFM69HCW_PACKET_CONFIG_1_CRC_AUTO_CLEAR_OFF (0x1ULL << 3)
+#define SHIFT_RFM69HCW_PACKET_CONFIG_1_DC_FREE 5
+#define SHIFT_RFM69HCW_PACKET_CONFIG_1_ADDRESS_FILTERING 1
+
+static inline uint8_t MK_RFM69HCW_PACKET_CONFIG_1(
+    bool packet_format_variable, rfm69hcw_dc_free_t dc_free, bool crc_on,
+    bool crc_auto_clear_off, rfm69hcw_address_filtering_t address_filtering) {
+    uint8_t ret = 0;
+    ret |= packet_format_variable
+               ? RFM69HCW_PACKET_CONFIG_1_PACKET_FORMAT_VARIABLE
+               : 0;
+    ret |= ((uint8_t) dc_free) << SHIFT_RFM69HCW_PACKET_CONFIG_1_DC_FREE;
+    ret |= crc_on ? RFM69HCW_PACKET_CONFIG_1_CRC_ON : 0;
+    ret |= crc_auto_clear_off ? RFM69HCW_PACKET_CONFIG_1_CRC_AUTO_CLEAR_OFF : 0;
+    ret |= ((uint8_t) address_filtering)
+           << SHIFT_RFM69HCW_PACKET_CONFIG_1_ADDRESS_FILTERING;
+    return ret;
+}
+
+#define RFM69HCW_PACKET_CONFIG_2_RESTART_RX (0x1ULL << 2)
+#define RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON (0x1ULL << 1)
+#define RFM69HCW_PACKET_CONFIG_2_AES_ON (0x1ULL << 0)
+#define SHIFT_RFM69HCW_PACKET_CONFIG_2_INTER_PACKET_RX_DELAY 4
+
+static inline uint8_t MK_RFM69HCW_PACKET_CONFIG_2(uint8_t inter_packet_rx_delay,
+                                                  bool restart_rx,
+                                                  bool auto_rx_restart_on,
+                                                  bool aes_on) {
+    uint8_t ret = 0;
+    ret |= (inter_packet_rx_delay & 0b1111ULL)
+           << SHIFT_RFM69HCW_PACKET_CONFIG_2_INTER_PACKET_RX_DELAY;
+    ret |= restart_rx ? RFM69HCW_PACKET_CONFIG_2_RESTART_RX : 0;
+    ret |= auto_rx_restart_on ? RFM69HCW_PACKET_CONFIG_2_AUTO_RX_RESTART_ON : 0;
+    ret |= aes_on ? RFM69HCW_PACKET_CONFIG_2_AES_ON : 0;
+    return ret;
+}
+
+typedef struct rfm69hcw rfm69hcw_t;
+typedef rfm69hcw_t* rfm69hcw_handle_t;
+
+// Register the RFM69HCW on the given SPI bus (including managing CS and RST),
+// but don't send any traffic yet.
+__result_use_check esp_err_t rfm69hcw_init(spi_host_device_t host,
+                                           gpio_num_t pin_cs,
+                                           gpio_num_t pin_rst,
+                                           rfm69hcw_handle_t* out_dev);
+
+// Unregister the RFM69HCW and free the handle;
+void rfm69hcw_destroy(rfm69hcw_handle_t dev);
+
+__result_use_check esp_err_t rfm69hcw_reset(rfm69hcw_handle_t dev);
+__result_use_check esp_err_t rfm69hcw_reg_read(rfm69hcw_handle_t dev,
+                                               rfm69hcw_reg_t addr,
+                                               uint8_t* val);
+__result_use_check esp_err_t rfm69hcw_reg_write(rfm69hcw_handle_t dev,
+                                                rfm69hcw_reg_t addr,
+                                                uint8_t val);
+__result_use_check esp_err_t rfm69hcw_reg_block_write_fifo(
+    rfm69hcw_handle_t dev, const uint8_t* buff, uint8_t len);
+
+typedef enum rfm69hcw_power_level {
+    RFM69HCW_POWER_RX_or_PA0,
+    RFM69HCW_POWER_TX_NORMAL,
+    // Note: Spec requires 1% duty cycle in this mode! (And note that the power
+    // amplifiers are running at all times while in TX mode.) Also, MUST be off
+    // when in RX mode.
+    RFM69HCW_POWER_TX_HIGH,
+} rfm69hcw_power_level_t;
+
+// Note zero bytes are illegal sync bytes for the RFM69HCW, and the `sync_value`
+// argument must be a zero-terminated byte array of length at most 8.
+__result_use_check esp_err_t rfm69hcw_set_sync(rfm69hcw_handle_t dev,
+                                               const uint8_t* sync_value,
+                                               uint8_t sync_tol);
+__result_use_check esp_err_t
+rfm69hcw_set_power_level(rfm69hcw_handle_t dev, rfm69hcw_power_level_t level);
 
 typedef struct rfm69hcw_rx_config {
     rfm69hcw_data_mode_t data_mode;
@@ -305,6 +375,5 @@ typedef struct rfm69hcw_rx_config {
     uint8_t timeout_rssi_thresh;
 } rfm69hcw_rx_config_t;
 
-void rfm69hcw_configure_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg);
-
-#endif
+__result_use_check esp_err_t
+rfm69hcw_configure_rx(rfm69hcw_handle_t dev, const rfm69hcw_rx_config_t* cfg);
